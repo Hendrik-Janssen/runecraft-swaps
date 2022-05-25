@@ -1,5 +1,6 @@
 package com.hennie.runecraft.swaps.menuentry.application.service;
 
+import com.hennie.runecraft.swaps.menuentry.application.api.Option;
 import com.hennie.runecraft.swaps.menuentry.application.api.Target;
 import com.hennie.runecraft.swaps.menuentry.application.api.MenuEntryService;
 import net.runelite.api.Client;
@@ -9,9 +10,11 @@ import net.runelite.api.MenuEntry;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
 import static net.runelite.api.MenuAction.CC_OP;
 
 @Singleton
@@ -25,32 +28,44 @@ public class MenuEntryServiceImpl implements MenuEntryService {
     }
 
     @Override
-    public void swapMenuEntries(String firstMenuEntryOption, String secondMenuEntryOption, Target target) {
-        MenuEntry[] menuEntries = client.getMenuEntries();
-        final Optional<MenuEntry> firstMenuEntry = getMenuEntry(menuEntries, firstMenuEntryOption, target.getName());
-        final Optional<MenuEntry> secondMenuEntry = getMenuEntry(menuEntries, secondMenuEntryOption, target.getName(), CC_OP);
+    public void swapMenuEntries(Target target) {
+        target.getOptionsToSwapFrom()
+                .forEach(optionToSwapFrom -> swapMenuEntry(optionToSwapFrom, target));
+    }
 
-        if (firstMenuEntry.isPresent() && secondMenuEntry.isPresent()) {
-            final int firstMenuEntryIndex = Arrays.asList(menuEntries).indexOf(firstMenuEntry.get());
-            final int secondMenuEntryIndex = Arrays.asList(menuEntries).indexOf(secondMenuEntry.get());
-            menuEntries[firstMenuEntryIndex] = secondMenuEntry.get().setType(CC_OP);
-            menuEntries[secondMenuEntryIndex] = firstMenuEntry.get().setType(CC_OP);
-            client.setMenuEntries(menuEntries);
+    private void swapMenuEntry(Option optionToSwapFrom, Target target) {
+        MenuEntry[] menuEntries = client.getMenuEntries();
+        final Optional<MenuEntry> menuEntryToSwapFrom = getMenuEntry(menuEntries, optionToSwapFrom, target.getName());
+        final Optional<MenuEntry> menuEntryToSwapTo = getMenuEntry(menuEntries, target.getOptionToSwapTo(), target.getName());
+
+        if (menuEntryToSwapFrom.isPresent() && menuEntryToSwapTo.isPresent()) {
+            final int menuEntryToSwapFromIndex = Arrays.asList(menuEntries).indexOf(menuEntryToSwapFrom.get());
+            final int menuEntryToSwapToIndex = Arrays.asList(menuEntries).indexOf(menuEntryToSwapTo.get());
+            if (!isFirstMenuEntry(menuEntryToSwapToIndex, menuEntries)) {
+                menuEntries[menuEntryToSwapFromIndex] = menuEntryToSwapTo.get().setType(CC_OP);
+                menuEntries[menuEntryToSwapToIndex] = menuEntryToSwapFrom.get().setType(CC_OP);
+                client.setMenuEntries(menuEntries);
+            }
         }
     }
 
-    private Optional<MenuEntry> getMenuEntry(MenuEntry[] menuEntries, String option, String target) {
-        return Stream.of(menuEntries)
-                .filter(entry -> entry.getOption().equals(option))
-                .filter(entry -> entry.getTarget().contains(target))
-                .findFirst();
+    private boolean isFirstMenuEntry(int menuEntryToSwapToIndex, MenuEntry[] menuEntries) {
+        return menuEntryToSwapToIndex == menuEntries.length - 1;
     }
 
-    private Optional<MenuEntry> getMenuEntry(MenuEntry[] menuEntries, String option, String target, MenuAction type) {
-        return Stream.of(menuEntries)
-                .filter(entry -> entry.getOption().equals(option))
+    private Optional<MenuEntry> getMenuEntry(MenuEntry[] menuEntries, Option option, String target) {
+        List<MenuEntry> filteredMenuEntries = Stream.of(menuEntries)
+                .filter(entry -> entry.getOption().equals(option.getName()))
                 .filter(entry -> entry.getTarget().contains(target))
-                .filter(entry -> entry.getType().equals(type))
-                .findFirst();
+                .collect(toList());
+
+        if (filteredMenuEntries.size() > 1) {
+            return filteredMenuEntries.stream()
+                    .filter(menuEntry -> menuEntry.getType().equals(CC_OP))
+                    .findFirst();
+        } else {
+            return filteredMenuEntries.stream()
+                    .findFirst();
+        }
     }
 }

@@ -16,4 +16,10 @@ public interface RunecraftSwapsConfig extends Config
 	{
 		return "Hello";
 	}
+
+//	@ConfigItem(
+//			keyName = "swapEssencePouchesInBank",
+//			name = "Swap Essence Pouches In Bank",
+//			description = "Shows 'Fill' as first option on the essence pouches while the bank interface is open"
+//	)
 }
