@@ -60,12 +60,16 @@ public class MenuEntryServiceImpl implements MenuEntryService {
                 .collect(toList());
 
         if (filteredMenuEntries.size() > 1) {
-            return filteredMenuEntries.stream()
-                    .filter(menuEntry -> menuEntry.getType().equals(CC_OP))
-                    .findFirst();
+            return findHighestPrioMenuEntry(filteredMenuEntries);
         } else {
             return filteredMenuEntries.stream()
                     .findFirst();
         }
+    }
+
+    private Optional<MenuEntry> findHighestPrioMenuEntry(List<MenuEntry> filteredMenuEntries) {
+        return filteredMenuEntries.stream()
+                .filter(menuEntry -> menuEntry.getType().equals(CC_OP))
+                .findFirst();
     }
 }
