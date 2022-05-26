@@ -14,7 +14,8 @@ public enum Target {
     DESERT_AMULET_4("Desert amulet 4", List.of(REMOVE, WEAR), NARDAH),
     NPC_CONTACT("NPC Contact", List.of(CAST), DARK_MAGE),
     RING_OF_THE_ELEMENTS("Ring of the elements", List.of(REMOVE, WEAR), LAST_DESTINATION),
-    CRAFTING_CAPE_T("Crafting cape(t)", List.of(REMOVE, WEAR), TELEPORT);
+    CRAFTING_CAPE_T("Crafting cape(t)", List.of(REMOVE, WEAR), TELEPORT),
+    BINDING_NECKLACE("Binding necklace", List.of(DEPOSIT_ALL), WEAR);
 
     private final String name;
     private final List<Option> optionsToSwapFrom;
